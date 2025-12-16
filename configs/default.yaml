@@ -1,0 +1,49 @@
+# Training Configuration
+model:
+  name: "instance_aware_diffusion"
+  pretrained_model: "runwayml/stable-diffusion-v1-5"
+  unet_channels: 320
+  num_semantic_classes: 150  # ADE20K有150个类别
+  instance_embedding_dim: 128
+  
+dataset:
+  name: "ADE20K"
+  root_dir: "./data/ADEChallengeData2016"
+  image_size: 512
+  batch_size: 4
+  num_workers: 4
+  
+training:
+  # Stage 1: 仅训练新模块
+  stage1_epochs: 20
+  stage1_lr: 1e-3
+  
+  # Stage 2: 端到端微调
+  stage2_epochs: 10
+  stage2_lr: 1e-5
+  
+  gradient_accumulation_steps: 4
+  mixed_precision: "fp16"
+  save_every: 1000
+  
+# 实例感知配置
+instance_aware:
+  noise_level: 0.1  # 实例概率化采样的噪声水平
+  num_instances_per_class: 5  # 每个类别最多的实例数
+  
+# 多尺度注意力引导
+attention_guidance:
+  scales: [8, 16, 32, 64]  # 不同分辨率层级
+  guidance_weights: [0.5, 1.0, 1.5, 2.0]  # 高分辨率权重更大
+  small_object_threshold: 1024  # 小于32x32像素认为是小物体
+  
+# 评估配置
+evaluation:
+  metrics: ["fid", "lpips", "instance_acc", "small_object_acc"]
+  num_samples: 2000
+  
+# 日志配置
+logging:
+  use_wandb: true
+  project_name: "semantic_synthesis"
+  log_every: 100
